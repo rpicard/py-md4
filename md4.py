@@ -5,21 +5,27 @@ def md4(message):
     https://tools.ietf.org/html/rfc1320
     """
 
-    # work with an array of bytes rather than a string
-    message = [ord(c) for c in message]
-
     # we'll need to remember this for later
     original_byte_length = len(message)
     original_bit_length = original_byte_length * 8
 
-
-    # -- Padding
-
+    # turn message into a list of 32-bit words
+    m = [ord(c) for c in message]
+    for i in xrange(0, len(m) - 4, 4):
+        index = i/4
+        M[index] = (m[i] << 8) | m[i+1]
+        M[index] = (m[index] << 8) | m[i+2]
+        M[index] = (m[index] << 8) | m[i+3]
+        
     # add a '1' bit (how the hell is 0x80 a '1' bit?)
+    # DO IT HOW?
     message += [0x80]
 
     # add <= 511 '0' bits until the length is congruent to 448 % 512
-    message += [[0x00] for j in xrange(i) in xrange(512) if (original_byte_len + i) % 512 == 448][0]
+    for i in xrange(512):
+        if (original_byte_length + i) % 512 == 448:
+            for j in xrange(i):
+                message += [0x00]
 
     # add the length as a 64 bit big endian, use lower order bits if length overflows 2^64
     message += [ord(c) for c in pack('>Q', original_bit_length & 0xFFFFFFFFFFFFFFFF)]
@@ -40,13 +46,11 @@ def md4(message):
     # define a 32-bit left-rotate function (<<< in the RFC)
     rl = lambda x, n: (x << n) | ((x & 0xFFFFFFFF) >> (32-n))
 
-    # process each 16 word (4 byte) block
-    for i in xrange(0, len(message), 4):
+    # process each 16 word (64 byte) block
+    for i in xrange(0, len(message) - 64, 64):
         # TODO will this get the last byte?
-        block = message[i:i+4]
 
-        # copy current block into X
-        X = block
+        X = message[i:i+64]
 
         # save the current values of the registers
         AA = A
@@ -125,11 +129,11 @@ def md4(message):
         C = HH(C,D,A,B,7,11)
         B = HH(B,C,D,A,15,15)
 
-       # increment by previous values
-       A += AA 
-       B += BB
-       C += CC
-       D += DD
+        # increment by previous values
+        A += AA 
+        B += BB
+        C += CC
+        D += DD
 
     digest = (A << 32) | B
     digest = (digest << 32) | C
