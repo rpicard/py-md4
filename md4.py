@@ -11,24 +11,26 @@ def md4(message):
 
     # turn message into a list of 32-bit words
     m = [ord(c) for c in message]
-    for i in xrange(0, len(m) - 4, 4):
+    M = []
+    for i in xrange(0, len(m) - 5, 4):
         index = i/4
-        M[index] = (m[i] << 8) | m[i+1]
-        M[index] = (m[index] << 8) | m[i+2]
-        M[index] = (m[index] << 8) | m[i+3]
+        M.append(m[i])
+        M[index] = (M[index] << 8) | m[i+1]
+        M[index] = (M[index] << 8) | m[i+2]
+        M[index] = (M[index] << 8) | m[i+3]
         
     # add a '1' bit (how the hell is 0x80 a '1' bit?)
     # DO IT HOW?
-    message += [0x80]
+    M += [0x80]
 
     # add <= 511 '0' bits until the length is congruent to 448 % 512
     for i in xrange(512):
         if (original_byte_length + i) % 512 == 448:
             for j in xrange(i):
-                message += [0x00]
+                M += [0x00]
 
     # add the length as a 64 bit big endian, use lower order bits if length overflows 2^64
-    message += [ord(c) for c in pack('>Q', original_bit_length & 0xFFFFFFFFFFFFFFFF)]
+    M += [ord(c) for c in pack('>Q', original_bit_length & 0xFFFFFFFFFFFFFFFF)]
 
     # initialize the registers to magic values
     # TODO these could be the wrong endian
@@ -47,10 +49,10 @@ def md4(message):
     rl = lambda x, n: (x << n) | ((x & 0xFFFFFFFF) >> (32-n))
 
     # process each 16 word (64 byte) block
-    for i in xrange(0, len(message) - 64, 64):
+    for i in xrange(0, len(M) - 16, 16):
         # TODO will this get the last byte?
 
-        X = message[i:i+64]
+        X = M[i:i+16]
 
         # save the current values of the registers
         AA = A
@@ -130,13 +132,13 @@ def md4(message):
         B = HH(B,C,D,A,15,15)
 
         # increment by previous values
-        A += AA 
-        B += BB
-        C += CC
-        D += DD
+        A =  ((A + AA) & 0xFFFFFFFF) + 0x1000000000
+        B =  ((B + BB) & 0xFFFFFFFF) + 0x1000000000
+        C =  ((C + CC) & 0xFFFFFFFF) + 0x1000000000
+        D =  ((D + DD) & 0xFFFFFFFF) + 0x1000000000
 
     digest = (A << 32) | B
     digest = (digest << 32) | C
     digest = (digest << 32) | D
 
-    return digest
+    return hex(digest)
