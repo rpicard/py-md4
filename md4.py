@@ -77,3 +77,50 @@ def md4(message):
         r1(d,a,b,c,13,7)
         r1(c,d,a,b,14,11)
         r1(b,c,d,a,15,19)
+
+        # round 2
+        r2 = lambda a,b,c,d,k,s: rl((a + G(b,c,d) + X[k] + 0x5A827999), s)
+
+        # perform the 16 operations
+        r2(a,b,c,d,0,3)
+        r2(d,a,b,c,4,5)
+        r2(c,d,a,b,8,9)
+        r2(b,c,d,a,12,13)
+
+        r2(a,b,c,d,1,3)
+        r2(d,a,b,c,5,5)
+        r2(c,d,a,b,9,9)
+        r2(b,c,d,a,13,13)
+
+        r2(a,b,c,d,2,3)
+        r2(d,a,b,c,6,5)
+        r2(c,d,a,b,10,9)
+        r2(b,c,d,a,14,13)
+
+        r2(a,b,c,d,3,3)
+        r2(d,a,b,c,7,5)
+        r2(c,d,a,b,11,9)
+        r2(b,c,d,a,15,13)
+
+        # round 3
+        r3 = lambda a,b,c,d,k,s: rl((a + H(b,c,d) + X[k] + 0x6ED9EBA1), s)
+
+        r3(a,b,c,d,0,3)
+        r3(d,a,b,c,8,9)
+        r3(c,d,a,b,4,11)
+        r3(b,c,d,a,12,15)
+
+        r3(a,b,c,d,2,3)
+        r3(d,a,b,c,10,9)
+        r3(c,d,a,b,6,11)
+        r3(b,c,d,a,14,15)
+
+        r3(a,b,c,d,1,3)
+        r3(d,a,b,c,10,9)
+        r3(c,d,a,b,6,11)
+        r3(b,c,d,a,13,15)
+
+        r3(a,b,c,d,3,3)
+        r3(d,a,b,c,11,9)
+        r3(c,d,a,b,7,11)
+        r3(b,c,d,a15,15)
