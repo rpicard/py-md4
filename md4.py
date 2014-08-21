@@ -1,4 +1,5 @@
 from struct import pack
+from binascii import hexlify
 
 
 def make_words(byte_array):
@@ -158,8 +159,8 @@ def md4(message, debug=False):
         B = HH(B,C,D,A,14,15)
 
         A = HH(A,B,C,D,1,3)
-        D = HH(D,A,B,C,10,9)
-        C = HH(C,D,A,B,6,11)
+        D = HH(D,A,B,C,9,9)
+        C = HH(C,D,A,B,5,11)
         B = HH(B,C,D,A,13,15)
 
         A = HH(A,B,C,D,3,3)
@@ -173,7 +174,6 @@ def md4(message, debug=False):
             print "B (round 3): {0}".format(hex(B))
             print "C (round 3): {0}".format(hex(C))
             print "D (round 3): {0}".format(hex(D))
-            print "\n"
 
         # increment by previous values
         A =  ((A + AA) & 0xFFFFFFFF)
@@ -181,9 +181,19 @@ def md4(message, debug=False):
         C =  ((C + CC) & 0xFFFFFFFF)
         D =  ((D + DD) & 0xFFFFFFFF)
 
+        if debug:
+            print "\n"
+            print "A (incrmnt): {0}".format(hex(A))
+            print "B (incrmnt): {0}".format(hex(B))
+            print "C (incrmnt): {0}".format(hex(C))
+            print "D (incrmnt): {0}".format(hex(D))
+            print "\n"
 
-    digest = (A << 32) | B
-    digest = (digest << 32) | C
-    digest = (digest << 32) | D
 
-    return hex(digest)
+    # convert endian-ness for output
+    A = hexlify(pack('<L', A))
+    B = hexlify(pack('<L', B))
+    C = hexlify(pack('<L', C))
+    D = hexlify(pack('<L', D))
+
+    return A + B + C + D
