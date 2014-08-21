@@ -8,10 +8,10 @@ def make_words(byte_array):
     for i in xrange(0, len(byte_array), 4):
 
         index = i/4
-        res.append(byte_array[i])
-        res[index] = (res[index] << 8) | byte_array[i+1]
+        res.append(byte_array[i+3])
         res[index] = (res[index] << 8) | byte_array[i+2]
-        res[index] = (res[index] << 8) | byte_array[i+3]
+        res[index] = (res[index] << 8) | byte_array[i+1]
+        res[index] = (res[index] << 8) | byte_array[i]
 
     return res
         
