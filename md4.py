@@ -58,8 +58,8 @@ def md4(message, debug=False):
 
     # round functions
     def FF(a,b,c,d,k,s): return ROL((a + F(b,c,d) + X[k]) & 0xFFFFFFFF, s)
-    def GG(a,b,c,d,k,s): return ROL((a + G(b,c,d) + X[k] + 0x5A827999), s)
-    def HH(a,b,c,d,k,s): return ROL((a + H(b,c,d) + X[k] + 0x6ED9EBA1), s)
+    def GG(a,b,c,d,k,s): return ROL((a + G(b,c,d) + X[k] + 0x5A827999) & 0xFFFFFFFF, s)
+    def HH(a,b,c,d,k,s): return ROL((a + H(b,c,d) + X[k] + 0x6ED9EBA1) & 0xFFFFFFFF, s)
 
     # define a 32-bit left-rotate function (<<< in the RFC)
     def ROL(x, n): return ((x << n) & 0xFFFFFFFF) | (x >> (32-n))
