@@ -1,6 +1,23 @@
 from struct import pack
 
-def md4(message):
+
+def make_words(byte_array):
+
+    res = []
+
+    for i in xrange(0, len(byte_array), 4):
+
+        index = i/4
+        res.append(byte_array[i])
+        res[index] = (res[index] << 8) | byte_array[i+1]
+        res[index] = (res[index] << 8) | byte_array[i+2]
+        res[index] = (res[index] << 8) | byte_array[i+3]
+
+    return res
+        
+
+
+def md4(message, debug=False):
     """
     https://tools.ietf.org/html/rfc1320
     """
@@ -20,41 +37,38 @@ def md4(message):
         message += [0x00] * (120 - len(message))
 
     # add the length as a 64 bit big endian, use lower order bits if length overflows 2^64
-    message += [ord(c) for c in pack('>Q', (original_length * 8) & 0xFFFFFFFFFFFFFFFF)]
+    length = [ord(c) for c in pack('>Q', (original_length * 8) & 0xFFFFFFFFFFFFFFFF)]
+
+    # add the two words least significant first
+    message.extend(length[::-1])
+
+    if debug:
+        print "\nafter padding {0}".format([[hex(b) for b in message]])
 
     # initialize the registers to magic values
-    # TODO these could be the wrong endian
     A = 0x67452301
     B = 0xefcdab89
     C = 0x98badcfe
     D = 0x10325476
 
     # define F, G, and H
-    F = lambda x,y,z: (x & y) | ((~x) & z)
-    G = lambda x,y,z: (x & y) | (x & z) | (y & z)
-    H = lambda x,y,z: x ^ y ^ z
+    def F(x,y,z): return ((x & y) | ((~x) & z))
+    def G(x,y,z): return (x & y) | (x & z) | (y & z)
+    def H(x,y,z): return x ^ y ^ z
 
     # round functions
-    FF = lambda a,b,c,d,k,s: rl((a + F(b,c,d) + X[k]), s)
-    GG = lambda a,b,c,d,k,s: rl((a + G(b,c,d) + X[k] + 0x5A827999), s)
-    HH = lambda a,b,c,d,k,s: rl((a + H(b,c,d) + X[k] + 0x6ED9EBA1), s)
+    def FF(a,b,c,d,k,s): return ROL((a + F(b,c,d) + X[k]) & 0xFFFFFFFF, s)
+    def GG(a,b,c,d,k,s): return ROL((a + G(b,c,d) + X[k] + 0x5A827999), s)
+    def HH(a,b,c,d,k,s): return ROL((a + H(b,c,d) + X[k] + 0x6ED9EBA1), s)
 
     # define a 32-bit left-rotate function (<<< in the RFC)
-    rl = lambda x, n: (x << n) | ((x & 0xFFFFFFFF) >> (32-n))
+    def ROL(x, n): return ((x << n) & 0xFFFFFFFF) | (x >> (32-n))
 
     # turn the padded message into a list of 32-bit words
-    M = []
-    for i in xrange(0, len(message) - 5, 4):
-
-        index = i/4
-        M.append(message[i])
-        M[index] = (M[index] << 8) | message[i+1]
-        M[index] = (M[index] << 8) | message[i+2]
-        M[index] = (M[index] << 8) | message[i+3]
+    M = make_words(message)
         
-
     # process each 16 word (64 byte) block
-    for i in xrange(0, len(M) - 16, 16):
+    for i in xrange(0, len(M), 16):
 
         X = M[i:i+16]
 
@@ -63,6 +77,13 @@ def md4(message):
         BB = B
         CC = C
         DD = D
+
+        if debug:
+            print "\n"
+            print "A (initial): {0}".format(hex(A))
+            print "B (initial): {0}".format(hex(B))
+            print "C (initial): {0}".format(hex(C))
+            print "D (initial): {0}".format(hex(D))
 
         # round 1
 
@@ -87,6 +108,13 @@ def md4(message):
         C = FF(C,D,A,B,14,11)
         B = FF(B,C,D,A,15,19)
 
+        if debug:
+            print "\n"
+            print "A (round 1): {0}".format(hex(A))
+            print "B (round 1): {0}".format(hex(B))
+            print "C (round 1): {0}".format(hex(C))
+            print "D (round 1): {0}".format(hex(D))
+
         # round 2
 
         # perform the 16 operations
@@ -110,6 +138,13 @@ def md4(message):
         C = GG(C,D,A,B,11,9)
         B = GG(B,C,D,A,15,13)
 
+        if debug:
+            print "\n"
+            print "A (round 2): {0}".format(hex(A))
+            print "B (round 2): {0}".format(hex(B))
+            print "C (round 2): {0}".format(hex(C))
+            print "D (round 2): {0}".format(hex(D))
+
         # round 3
 
         A = HH(A,B,C,D,0,3)
@@ -132,11 +167,20 @@ def md4(message):
         C = HH(C,D,A,B,7,11)
         B = HH(B,C,D,A,15,15)
 
+        if debug:
+            print "\n"
+            print "A (round 3): {0}".format(hex(A))
+            print "B (round 3): {0}".format(hex(B))
+            print "C (round 3): {0}".format(hex(C))
+            print "D (round 3): {0}".format(hex(D))
+            print "\n"
+
         # increment by previous values
         A =  ((A + AA) & 0xFFFFFFFF)
         B =  ((B + BB) & 0xFFFFFFFF)
         C =  ((C + CC) & 0xFFFFFFFF)
         D =  ((D + DD) & 0xFFFFFFFF)
+
 
     digest = (A << 32) | B
     digest = (digest << 32) | C
