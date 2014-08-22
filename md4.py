@@ -31,11 +31,12 @@ def md4(message, debug=False):
     # add a '1' bit via a byte
     message += [0x80]
 
+    mod_length = len(message) % 64
     # padding to 448 % 512 bits (56 % 64 byte)
-    if len(message) < 56:
-        message += [0x00] * (56 - len(message))
+    if mod_length < 56:
+        message += [0x00] * (56 - mod_length)
     else:
-        message += [0x00] * (120 - len(message))
+        message += [0x00] * (120 - mod_length)
 
     # add the length as a 64 bit big endian, use lower order bits if length overflows 2^64
     length = [ord(c) for c in pack('>Q', (original_length * 8) & 0xFFFFFFFFFFFFFFFF)]
